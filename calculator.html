@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Hyperion's Calculator</title>
+    <style>
+        .title{
+            color: darkviolet;
+        }
+        #screen{
+            background-color: deepskyblue;
+        }
+        #screennumber{
+            /* 设置字体 */
+            font-size: 30px;
+            font-weight: 550;
+            /* 限制最大宽度 */
+            max-width: 400px;
+            /* 设置溢出时的显示 ... */
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            /* 设置数据溢出时的显示为隐藏显示 */
+            overflow: hidden;
+        }
+        .button{
+            width: 95.5px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 25px;
+            background-color:lightgray;
+        }
+        .buttonnumber{
+            width: 95.5px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 25px;
+            background-color: white
+        }
+        .table{
+            background-color: grey;
+        }
+    </style>
+    <!-- 为打出数学公式，引用该源 -->
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML-full">
+        var a = "";
+        var Ans = "";//设置Ans存储上一次计算的值
+        var bool = false;
+        function show(){
+            element = event.srcElement.innerText;//获得当前操作按钮对应的字符串值
+            // 设置DEL功能，其主要核心为截取a的子字符串
+            if (element == "DEL"){
+                if(a.lastIndexOf("Ans") == a.length - 3 && a.length >= 3){//删除Ans
+                    a = a.substring(0,a.length-3);
+                    document.getElementById('screennumber').innerText = a; 
+                }
+                else {
+                    // console.log(a);
+                    a = a.substring(0,a.length-1);
+                    // console.log(a);
+                    document.getElementById('screennumber').innerText = a;
+                }
+                if (a.length == 0){//对字符串长度为0的情况进行特殊处理
+                    document.getElementById('screennumber').innerText = "0";
+                    return;
+                } 
+                return;
+            }
+            //设置CE功能，负责清楚最新一次输入的内容
+            if (element == "CE"){
+                for (var i = a.length - 1;i >= 0;i--){//删除最近一次加号后输入的内容
+                    if (a.indexOf('+',i) != -1){
+                        a = a.substring(0,a.indexOf('+',i) + 1);
+                        document.getElementById('screennumber').innerText = a;
+                        break;
+                    }
+                    if (a.indexOf('-',i) != -1){//删除最近一次减号后输入的内容
+                        a = a.substring(0,a.indexOf('-',i) + 1);
+                        document.getElementById('screennumber').innerText = a;
+                        break;
+                    }
+                    if (a.indexOf('*',i) != -1){//删除最近一次乘号后输入的内容
+                        a = a.substring(0,i + 1);
+                        document.getElementById('screennumber').innerText = a;
+                        break;
+                    }
+                    if (a.indexOf('/',i) != -1){//删除最近一次除号后输入的内容
+                        a = a.substring(0,i + 1);
+                        document.getElementById('screennumber').innerText = a;
+                        break;
+                    }
+                    if (a.indexOf('%',i) != -1){//删除百分号
+                        a = a.substring(0,a.indexOf('%',i));
+                        document.getElementById('screennumber').innerText = a;
+                        break;
+                    }
+                    if (i == 0){//未找到操作符时，执行清0功能
+                        a = "";
+                        document.getElementById('screennumber').innerText = "0";
+                    }
+                }
+                return;
+            }
+            if (bool && (element != "+" && element != "/" && element != "*" && element != "-")) {
+                a = "";
+            }
+            bool = false;
+            a += element;//向a的后面添加新输入的字符
+            document.getElementById('screennumber').innerText = a;
+        }
+        function clearly(){//实现清0功能,并删除记录
+            a = "";
+            Ans = "";
+            document.getElementById('screennumber').innerText = "0";
+        }
+    </script>
+    <script>
+        function Calculate(){
+            bool = true;
+            const result = document.getElementById('screennumber');
+            if (Ans != ""){
+                a = a.replace(/Ans/g , Ans);//将a中的所有“Ans”替换为Ans的值对应字符串
+            }
+            else if(a.search("Ans") != -1){
+                result.innerText = "Error:Ans为空";
+            }
+            const xhr = new XMLHttpRequest();//创建对象
+            xhr.open('POST','http://192.168.43.158:8800/calculator');//初始化，设置请求方法和url
+            xhr.setRequestHeader("Content-type","application/json");//设置请求头内容
+            xhr.send(a);//将当前显示器上的字符串传入后端
+            xhr.onreadystatechange = function (){//设置响应
+                if(xhr.readyState === 4){
+                    if(xhr.status >= 200 && xhr.status < 300){
+                        Ans = xhr.responseText;
+                        // console.log(Ans);
+                        a = "Ans"//使用Ans替换原先输入的字符串
+                        result.innerText = xhr.response;//处理服务端返回的结果
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <br><br>
+    <h1 align="center" class="title">Welcome to Hyperion's Calculator</h1>
+    <br><br><br><br>
+<!-- 定义计算器的显示屏部分 -->
+<table border="5px" align="center">
+    <tr height="95px"><td width="400px" id="screen"><div id="screennumber">0</div></td></tr>
+</table>
+<!-- 定义计算器的按键部分 -->
+<table border="5px" align="center" class="table">
+    <tr height="50px">
+        <td><button class="button" onclick="show()">%</button></td>
+        <td><button class="button" onclick="show()">(</button></td>
+        <td><button class="button" onclick="show()">)</button></td>
+        <td><button class="button" onclick="show()">^</button></td>
+    </tr>
+    <tr height="50px">
+        <td><button class="button" onclick="show()">CE</button></td>
+        <td><button class="button" onclick="clearly()">C</button></td>
+        <td><button class="button" onclick="show()">DEL</button></td>
+        <td><button class="button" onclick="show()">/</button></td>
+    </tr>
+    <tr height="50px">
+        <td><button class="buttonnumber" onclick="show()">7</button></td>
+        <td><button class="buttonnumber" onclick="show()">8</button></td>
+        <td><button class="buttonnumber" onclick="show()">9</button></td>
+        <td><button class="button" onclick="show()">*</button></td>
+    </tr>
+    <tr height="50px">
+        <td><button class="buttonnumber" onclick="show()">4</button></td>
+        <td><button class="buttonnumber" onclick="show()">5</button></td>
+        <td><button class="buttonnumber" onclick="show()">6</button></td>
+        <td><button class="button" onclick="show()">-</button></td>
+    </tr>
+    <tr height="50px">
+        <td><button class="buttonnumber" onclick="show()">1</button></td>
+        <td><button class="buttonnumber" onclick="show()">2</button></td>
+        <td><button class="buttonnumber" onclick="show()">3</button></td>
+        <td><button class="button" onclick="show()">+</button></td>
+    </tr>
+    <tr height="50px">
+        <td><button class="button" onclick="show()">Ans</button></td>
+        <td><button class="buttonnumber" onclick="show()">0</button></td>
+        <td><button class="button" onclick="show()">.</button></td>
+        <td><button class="button" id="equal" onclick="Calculate()">=</button></td>
+    </tr>
+</table>
+</body>
+</html>
