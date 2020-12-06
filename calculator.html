@@ -127,7 +127,7 @@
                 result.innerText = "Error:Ans为空";
             }
             const xhr = new XMLHttpRequest();//创建对象
-            xhr.open('POST','http://192.168.43.158:8800/calculator');//初始化，设置请求方法和url
+            xhr.open('POST','http://127.0.0.1:8800/calculator');//初始化，设置请求方法和url
             xhr.setRequestHeader("Content-type","application/json");//设置请求头内容
             xhr.send(a);//将当前显示器上的字符串传入后端
             xhr.onreadystatechange = function (){//设置响应
